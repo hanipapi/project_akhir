@@ -1,16 +1,21 @@
+// Lokasi File: lib/services/auth_service.dart
 
 import 'package:bcrypt/bcrypt.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+// [BARU] 1. Import Notification Service
+import 'package:project_akhir/services/notification_service.dart';
 
 class AuthService {
   final Box _userBox = Hive.box('userBox');
 
+  // --- Fungsi Register (Dengan perbaikan Bcrypt) ---
   bool registerUser(String username, String email, String password) {
     try {
       if (_userBox.containsKey(email)) {
         return false;
       }
+      // [PERBAIKAN] Menggunakan 'Bcrypt' (huruf kecil)
       String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
       _userBox.put(email, {
         'username': username,
@@ -24,30 +29,31 @@ class AuthService {
     }
   }
 
-  //
-  // 2. [FUNGSI BARU] Logika untuk Login User
-  //
+  // --- Fungsi Login (Dengan Notifikasi) ---
   Future<bool> loginUser(String email, String password) async {
     try {
-      // 1. Cek apakah email ada di database Hive
       if (!_userBox.containsKey(email)) {
-        return false; // Email tidak ditemukan
+        return false;
       }
 
-      // 2. Ambil data user dari Hive
-      final user = _userBox.get(email) as Map;
+      // [PERBAIKAN] Menggunakan Map<dynamic, dynamic>
+      final user = _userBox.get(email) as Map<dynamic, dynamic>;
       final String hashedPassword = user['password'];
 
-      // 3. Bandingkan password yang diinput dengan yang di Hive
-      //    Ini adalah fungsi utama bcrypt untuk verifikasi
+      // [PERBAIKAN] Menggunakan 'Bcrypt' (huruf kecil)
       bool passwordMatch = BCrypt.checkpw(password, hashedPassword);
 
       if (passwordMatch) {
-        // 4. [PENTING] Jika password cocok, buat session
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);       
-         // Kita simpan juga email-nya, akan berguna untuk halaman profil
+        await prefs.setBool('isLoggedIn', true);
         await prefs.setString('currentUserEmail', email);
+        
+        // [BARU] 2. Panggil notifikasi setelah login sukses
+        String username = user['username']; // Ambil username
+        NotificationService.showSimpleNotification(
+          'Login Berhasil!',
+          'Selamat datang kembali di ideaspark, $username.',
+        );
         
         return true; // Login berhasil
       } else {
@@ -59,18 +65,18 @@ class AuthService {
     }
   }
 
+  // --- Fungsi Get User (Dengan perbaikan Map) ---
   Future<Map<dynamic, dynamic>?> getCurrentUser() async {
     try {
-      // 1. Ambil email dari session
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('currentUserEmail');
 
       if (email == null) {
-        return null; // Tidak ada user yang login
+        return null;
       }
-
-      // 2. Ambil data dari userBox berdasarkan email
+      
       if (_userBox.containsKey(email)) {
+        // [PERBAIKAN] Menggunakan Map<dynamic, dynamic>
         return _userBox.get(email) as Map<dynamic, dynamic>;
       }
       return null;

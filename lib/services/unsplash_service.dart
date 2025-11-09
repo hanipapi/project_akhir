@@ -14,7 +14,7 @@ class UnsplashService {
     ),
   );
 
-  // --- Fungsi Get New Photos (Tetap sama) ---
+  // --- Fungsi Get New Photos (Beranda & Ide) ---
   Future<List<Photo>> getNewPhotos(int page) async {
     try {
       final response = await _dio.get(
@@ -35,11 +35,9 @@ class UnsplashService {
     }
   }
 
-  // --- [FUNGSI BARU] ---
-  // Fungsi untuk mencari foto berdasarkan query
+  // --- Fungsi Search Photos ---
   Future<List<Photo>> searchPhotos(String query, int page) async {
     try {
-      // Panggil endpoint /search/photos 
       final response = await _dio.get(
         '/search/photos',
         queryParameters: {
@@ -48,17 +46,52 @@ class UnsplashService {
           'per_page': 20,
         },
       );
-
-      // PENTING: Hasil pencarian ada di dalam key 'results'
       List<Photo> photos = (response.data['results'] as List)
           .map((item) => Photo.fromJson(item))
           .toList();
-
       return photos;
-
     } on DioException catch (e) {
       print('Error searching photos: $e');
       throw Exception('Failed to search photos');
+    }
+  }
+
+  // --- Fungsi Get Popular Photos (Carousel) ---
+  Future<List<Photo>> getPopularPhotos() async {
+    try {
+      final response = await _dio.get(
+        '/photos',
+        queryParameters: {
+          'page': 1,
+          'per_page': 5,
+          'order_by': 'popular',
+        },
+      );
+      List<Photo> photos = (response.data as List)
+          .map((item) => Photo.fromJson(item))
+          .toList();
+      return photos;
+    } on DioException catch (e) {
+      print('Error fetching popular photos: $e');
+      throw Exception('Failed to load popular photos');
+    }
+  }
+
+  // --- [FUNGSI BARU] ---
+  // Fungsi untuk mengambil foto serupa/terkait
+  Future<List<Photo>> getRelatedPhotos(String photoId) async {
+    try {
+      // Panggil endpoint /photos/:id/related
+      final response = await _dio.get('/photos/$photoId/related');
+
+      // Endpoint ini mengembalikan data di dalam key 'results'
+      List<Photo> photos = (response.data['results'] as List)
+          .map((item) => Photo.fromJson(item))
+          .toList();
+      return photos;
+    } on DioException catch (e) {
+      print('Error fetching related photos: $e');
+      throw Exception('Failed to load related photos');
     }
   }
 }

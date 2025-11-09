@@ -1,9 +1,10 @@
 // Lokasi File: lib/pages/main_page.dart
 import 'package:flutter/material.dart';
-import 'beranda_page.dart';
-import 'koleksi_page.dart';
-import 'pencarian_page.dart';
-import 'profil_page.dart';
+import 'package:project_akhir/pages/beranda_page.dart';
+// [INI BAGIAN PENTING] Pastikan import ini ada
+import 'package:project_akhir/pages/koleksi_page.dart';
+import 'package:project_akhir/pages/pencarian_page.dart';
+import 'package:project_akhir/pages/profil_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,6 +14,11 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  // --- Branding Colors ---
+  static const Color primaryGreen = Color(0xFF2ECC71);
+  static const Color primaryBlack = Color(0xFF1F1F1F);
+  static const Color darkGrey = Color(0xFF6E6E6E);
+
   // Variabel untuk menyimpan indeks tab yang sedang aktif
   int _selectedIndex = 0;
 
@@ -20,7 +26,7 @@ class _MainPageState extends State<MainPage> {
   static const List<Widget> _pages = <Widget>[
     BerandaPage(),
     PencarianPage(),
-    KoleksiPage(),
+    KoleksiPage(), // <-- Ini yang menyebabkan error jika import tidak ada
     ProfilPage(),
   ];
 
@@ -34,39 +40,39 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Body akan menampilkan halaman sesuai _selectedIndex
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-
-      // Definisikan BottomNavigationBar
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
-        // Daftar item/tombol di navigasi
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'Beranda',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search),
             label: 'Cari',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.collections),
+            icon: Icon(Icons.collections_bookmark_outlined),
+            activeIcon: Icon(Icons.collections_bookmark),
             label: 'Koleksi',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Profil',
           ),
         ],
-        // Pengaturan UI
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue, // Warna tab aktif
-        unselectedItemColor: Colors.grey, // Warna tab non-aktif
-        onTap: _onItemTapped, // Fungsi yang dipanggil saat tab diklik
-        type: BottomNavigationBarType.fixed, // Agar semua label tampil
+        selectedItemColor: primaryBlack,
+        unselectedItemColor: darkGrey,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        elevation: 1.0,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
       ),
     );
   }

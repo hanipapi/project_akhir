@@ -6,10 +6,8 @@ import 'package:project_akhir/pages/toolkit_page.dart';
 import 'package:project_akhir/services/auth_service.dart';
 import 'package:project_akhir/services/saran_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:project_akhir/services/notification_service.dart';
+// [DIHAPUS] Import notification_service sudah tidak perlu di halaman ini
 
-
-// 1. Ubah menjadi StatefulWidget
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
 
@@ -18,11 +16,15 @@ class ProfilPage extends StatefulWidget {
 }
 
 class _ProfilPageState extends State<ProfilPage> {
-  // 2. Buat instance service
+  // --- Branding Colors ---
+  static const Color primaryGreen = Color(0xFF2ECC71);
+  static const Color primaryBlack = Color(0xFF1F1F1F);
+  static const Color lightGrey = Color(0xFFF2F2F2);
+  static const Color darkGrey = Color(0xFF6E6E6E);
+
+  // --- State ---
   final AuthService _authService = AuthService();
   final SaranService _saranService = SaranService();
-
-  // 3. Variabel untuk data user dan controller
   String _username = "Memuat...";
   String _email = "Memuat...";
   final TextEditingController _saranController = TextEditingController();
@@ -30,11 +32,9 @@ class _ProfilPageState extends State<ProfilPage> {
   @override
   void initState() {
     super.initState();
-    // 4. Panggil data user saat halaman dibuka
     _loadUserData();
   }
 
-  // 5. Fungsi untuk mengambil data user
   Future<void> _loadUserData() async {
     final user = await _authService.getCurrentUser();
     if (user != null) {
@@ -45,17 +45,13 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // 6. Fungsi untuk kirim saran
   Future<void> _kirimSaran() async {
     final saran = _saranController.text;
     if (saran.isEmpty) {
       _showSnackBar('Saran tidak boleh kosong.', isError: true);
       return;
     }
-
-    // Tutup keyboard
     FocusScope.of(context).unfocus();
-
     try {
       await _saranService.simpanSaran(saran);
       _saranController.clear();
@@ -65,12 +61,10 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // 7. Fungsi Logout (tetap sama)
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
     await prefs.remove('currentUserEmail');
-
     if (!context.mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const AuthPage()),
@@ -90,104 +84,135 @@ class _ProfilPageState extends State<ProfilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil Saya')),
-      // 8. Gunakan ListView agar bisa di-scroll
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Akun Anda',
+          style: TextStyle(color: primaryBlack, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
         children: [
-          // --- BAGIAN INFO USER ---
-          const Icon(Icons.account_circle, size: 100, color: Colors.blue),
-          const SizedBox(height: 10),
-          Center(
-            child: Text(
+          const SizedBox(height: 16),
+          // --- 1. Bagian Info User ---
+          ListTile(
+            leading: CircleAvatar(
+              radius: 30,
+              backgroundColor: lightGrey,
+              child: Icon(Icons.person, size: 30, color: darkGrey),
+            ),
+            title: Text(
               _username,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: primaryBlack,
+              ),
             ),
-          ),
-          Center(
-            child: Text(
+            subtitle: Text(
               _email,
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              style: const TextStyle(color: darkGrey),
             ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {},
           ),
-          const Divider(height: 40),
-
-          //
-          // [BARU] Tombol untuk Toolkit
-          ElevatedButton.icon(
-            onPressed: () {
+          
+          // --- 2. Grup Toolkit ---
+          _buildGroupHeader('Toolkit'),
+          ListTile(
+            leading: const Icon(Icons.construction_outlined, color: primaryBlack),
+            title: const Text('Creative Toolkit'),
+            subtitle: const Text('Kalkulator Golden Hour & Palet'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const ToolkitPage()),
               );
             },
-            icon: const Icon(Icons.construction),
-            label: const Text('Buka Creative Toolkit'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          
+          // --- [DIHAPUS] Grup Notifikasi ---
+          // Kita sudah tidak perlu tombol-tombol ini lagi
+          
+          // --- 3. Grup Saran & Kesan ---
+          _buildGroupHeader('Masukan'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              controller: _saranController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Tulis masukan Anda untuk aplikasi ini...',
+                filled: true,
+                fillColor: lightGrey,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
           ),
-
-          //notifikasi
-          const Text(
-            'Notifikasi',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 10),
-          // Tombol Tes Cepat
-          OutlinedButton(
-            onPressed: () {
-              NotificationService.showTestNotification();
-            },
-            child: const Text('Kirim Tes Notifikasi Sekarang'),
-          ),
-          const SizedBox(height: 10),
-          // Tombol Jadwalkan Harian
-          ElevatedButton(
-            onPressed: () {
-              NotificationService.scheduleDailyNotification();
-              _showSnackBar('Notifikasi harian (10:00) diaktifkan!', isError: false);
-            },
-            child: const Text('Aktifkan Notifikasi Harian (10:00)'),
-          ),
-
-          const Divider(height: 40),
-
-          // --- BAGIAN SARAN & KESAN --- 
-          const Text(
-            'Saran & Kesan',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _saranController,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Tulis masukan Anda untuk aplikasi ini...',
-              border: OutlineInputBorder(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: ElevatedButton(
+              onPressed: _kirimSaran,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+              child: const Text('Kirim Saran'),
             ),
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _kirimSaran,
-            child: const Text('Kirim Saran'),
-          ),
+          
+          const SizedBox(height: 24),
 
-          const Divider(height: 40),
-
-          // --- BAGIAN LOGOUT --- 
-          ElevatedButton(
-            onPressed: () => _logout(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-            ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+          // --- 4. Tombol Logout ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: ElevatedButton(
+              onPressed: () => _logout(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[50],
+                foregroundColor: Colors.red[700],
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
+
+  // Helper untuk judul grup
+  Widget _buildGroupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 24.0, bottom: 8.0),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          color: darkGrey,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  // [DIHAPUS] Helper _showNotificationDialog() sudah tidak diperlukan
 }

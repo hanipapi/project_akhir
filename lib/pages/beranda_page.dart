@@ -1,12 +1,11 @@
 // Lokasi File: lib/pages/beranda_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:project_akhir/pages/detail_foto_page.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:project_akhir/models/photo_model.dart';
+import 'package:project_akhir/pages/detail_foto_page.dart';
 import 'package:project_akhir/services/unsplash_service.dart';
 
-// 2. Ubah menjadi StatefulWidget
 class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
 
@@ -15,50 +14,39 @@ class BerandaPage extends StatefulWidget {
 }
 
 class _BerandaPageState extends State<BerandaPage> {
-  // 3. Buat instance service
+  // [BARU] Definisikan warna branding
+  static const Color primaryGreen = Color(0xFF2ECC71);
+  static const Color primaryBlack = Color(0xFF1F1F1F);
+  static const Color darkGrey = Color(0xFF6E6E6E);
+
   final UnsplashService _unsplashService = UnsplashService();
-  
-  // 4. Buat variabel untuk menyimpan daftar foto
   List<Photo> _photos = [];
   bool _isLoading = true;
   int _currentPage = 1;
 
-  // 5. Panggil fungsi untuk mengambil data saat halaman pertama kali dibuka
   @override
   void initState() {
     super.initState();
     _fetchPhotos();
   }
 
-  // 6. Fungsi untuk mengambil data dari service
   Future<void> _fetchPhotos() async {
-    // Set loading jadi true (jika ini halaman pertama)
     if (_currentPage == 1) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() { _isLoading = true; });
     }
-
     try {
-      // Panggil service
       final newPhotos = await _unsplashService.getNewPhotos(_currentPage);
-      
-      // Tambahkan foto baru ke daftar
       setState(() {
         _isLoading = false;
         _photos.addAll(newPhotos);
-        _currentPage++; // Siapkan untuk halaman selanjutnya
+        _currentPage++;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      // Tampilkan error
+      setState(() { _isLoading = false; });
       _showSnackBar('Gagal memuat foto. Cek koneksi Anda.', isError: true);
     }
   }
   
-  // Fungsi helper untuk SnackBar
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -71,75 +59,114 @@ class _BerandaPageState extends State<BerandaPage> {
 
   @override
   Widget build(BuildContext context) {
+    // [UI DIUBAH]
     return Scaffold(
+      backgroundColor: Colors.white, // Latar belakang putih
       appBar: AppBar(
-        title: const Text('Beranda InstaGallery'),
+        backgroundColor: Colors.white,
+        elevation: 0, // Hilangkan bayangan
+        title: Text(
+          'ideaspark',
+          style: TextStyle(
+            color: primaryBlack, // Teks hitam
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_none, color: primaryBlack),
+            onPressed: () {
+              // Nanti bisa dihubungkan ke halaman notifikasi
+            },
+          )
+        ],
       ),
-      // 7. Tampilkan loading atau grid
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: primaryGreen))
           : RefreshIndicator(
+              color: primaryGreen,
               onRefresh: () async {
-                // Saat ditarik (refresh), reset dan ambil data dari halaman 1
                 setState(() {
                   _photos = [];
                   _currentPage = 1;
                 });
                 await _fetchPhotos();
               },
-              // 8. Gunakan MasonryGridView
               child: MasonryGridView.count(
                 padding: const EdgeInsets.all(8.0),
-                crossAxisCount: 2, // Tampilkan 2 kolom
+                crossAxisCount: 2,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
                 itemCount: _photos.length,
                 itemBuilder: (context, index) {
                   final photo = _photos[index];
                   
-                  // [GANTI INI] Bungkus Card dengan InkWell
+                  // [UI ITEM DIUBAH]
                   return InkWell(
                     onTap: () {
-                      // [LOGIKA BARU] Navigasi ke Halaman Detail
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => DetailFotoPage(photo: photo),
                         ),
                       );
                     },
-                    child: Card(
-                      elevation: 2,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Image.network(
+                    // Kita gunakan Column, bukan Stack lagi
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 1. Gambar dengan sudut melengkung
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16.0),
+                          child: Image.network(
                             photo.imageUrl,
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, progress) {
                               if (progress == null) return child;
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(32.0),
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                              return Container(
+                                color: Colors.grey[200],
+                                height: 200 + (index % 2 * 100),
+                                child: const Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: primaryGreen),
                                 ),
                               );
                             },
                           ),
+                        ),
+                        
+                        // 2. Teks (Nama Foto / Deskripsi)
+                        if (photo.description.isNotEmpty) // Hanya tampilkan jika ada
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
                             child: Text(
-                              photo.creatorName,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                              maxLines: 1,
+                              photo.description,
+                              style: TextStyle(
+                                color: primaryBlack,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ],
-                      ),
+                        
+                        // 3. Teks (Penulis)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0, left: 4.0, right: 4.0, bottom: 8.0),
+                          child: Text(
+                            photo.creatorName,
+                            style: TextStyle(
+                              color: darkGrey,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   );
-                }
+                },
               ),
             ),
     );

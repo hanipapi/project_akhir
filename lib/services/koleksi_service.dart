@@ -18,15 +18,19 @@ class KoleksiService {
 
   // --- Fungsi Simpan, Hapus, Cek (Tidak Berubah) ---
 
-  Future<void> simpanFoto(Photo photo) async {
+ Future<void> simpanFoto(Photo photo) async {
     final email = await _getCurrentUserEmail();
     if (email == null) return;
     List<dynamic> koleksi = await _getUserCollection(email);
+    
+    // [MODIFIKASI DI SINI]
     koleksi.add({
       'id': photo.id,
       'imageUrl': photo.imageUrl,
       'creatorName': photo.creatorName,
+      'description': photo.description, // <-- [TAMBAHKAN INI]
     });
+    
     await _koleksiBox.put(email, koleksi);
   }
 

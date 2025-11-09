@@ -1,12 +1,13 @@
 // Lokasi File: lib/pages/toolkit_page.dart
 
-import 'dart:async';
+import 'auth_page.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:palette_generator/palette_generator.dart';
+import 'package:dart_suncalc/suncalc.dart';
 import 'package:intl/intl.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:project_akhir/services/currency_service.dart';
 
 class ToolkitPage extends StatefulWidget {
   const ToolkitPage({super.key});
@@ -16,294 +17,267 @@ class ToolkitPage extends StatefulWidget {
 }
 
 class _ToolkitPageState extends State<ToolkitPage> {
-  // --- STATE UNTUK JAM (dari Tahap 11) ---
-  Timer? _timer;
-  DateTime _currentTime = DateTime.now();
-  String _localTimezoneName = 'Memuat...';
-  bool _isLoadingLocation = true;
+  // --- Branding Colors ---
+  static const Color primaryGreen = Color(0xFF2ECC71);
+  static const Color primaryBlack = Color(0xFF1F1F1F);
+  static const Color lightGrey = Color(0xFFF2F2F2);
+  static const Color darkGrey = Color(0xFF6E6E6E);
 
-  // --- [STATE BARU] UNTUK KONVERTER MATA UANG ---
-  final CurrencyService _currencyService = CurrencyService();
-  final TextEditingController _amountController = TextEditingController(text: '1.0');
-  
-  // Daftar mata uang (sesuai brief + USD sebagai base)
-  final List<String> _currencies = ['USD', 'IDR', 'EUR', 'JPY'];
-  String _fromCurrency = 'USD';
-  String _toCurrency = 'IDR';
-  
-  bool _isLoadingRates = true;
-  String _conversionResult = '...';
-  // Map untuk menyimpan semua nilai tukar
-  Map<String, dynamic>? _rates;
+  // --- State untuk Golden Hour ---
+  bool _isLoadingLocation = true;
+  String _locationStatus = 'Mencari lokasi...';
+  String _sunriseTime = '...';
+  String _goldenHourTime = '...';
+  String _sunsetTime = '...';
+  String _goldenHourDuskTime = '...';
+  final DateFormat _timeFormat = DateFormat('HH:mm');
+
+  // --- State untuk Palet Warna ---
+  final ImagePicker _picker = ImagePicker();
+  File? _imageFile;
+  List<Color> _paletteColors = [];
+  bool _isLoadingPalette = false;
 
   @override
   void initState() {
     super.initState();
-    // --- Init Jam (dari Tahap 11) ---
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _currentTime = DateTime.now();
-      });
-    });
-    _initLocation();
-
-    // --- [BARU] Init Mata Uang ---
-    _loadRates();
+    _initLocation(); // Panggil logika LBS
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  // --- FUNGSI JAM (dari Tahap 11, tidak berubah) ---
+  // --- 1. Logika Kalkulator Golden Hour ---
   Future<void> _initLocation() async {
-    // ... (Fungsi ini tetap sama persis seperti Tahap 11) ...
     bool serviceEnabled;
     LocationPermission permission;
+
+    setState(() { _isLoadingLocation = true; });
+
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      setState(() { _localTimezoneName = 'Servis lokasi mati'; _isLoadingLocation = false; });
+      setState(() { _locationStatus = 'Servis lokasi mati'; _isLoadingLocation = false; });
       return;
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        setState(() { _localTimezoneName = 'Izin lokasi ditolak'; _isLoadingLocation = false; });
+        setState(() { _locationStatus = 'Izin lokasi ditolak'; _isLoadingLocation = false; });
         return;
       }
     }
     if (permission == LocationPermission.deniedForever) {
-      setState(() { _localTimezoneName = 'Izin lokasi ditolak permanen'; _isLoadingLocation = false; });
+      setState(() { _locationStatus = 'Izin ditolak permanen'; _isLoadingLocation = false; });
       return;
     }
+
+    // Jika semua OK, ambil lokasi & hitung jam
     try {
-      final TimezoneInfo timezoneInfo = await FlutterTimezone.getLocalTimezone();
-      final String timezoneName = timezoneInfo.toString();
-      setState(() { _localTimezoneName = timezoneName; _isLoadingLocation = false; });
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
+      
+      // [PERBAIKAN 2] Panggil SunCalc dengan parameter 'lat:' dan 'lng:'
+      var times = SunCalc.getTimes(
+        DateTime.now(), 
+        lat: position.latitude, 
+        lng: position.longitude
+      );
+      
+      setState(() {
+        // [PERBAIKAN 3] Tambahkan 'null check' (!) karena datanya nullable
+        _sunriseTime = _timeFormat.format(times.sunrise!.toLocal());
+        _goldenHourTime = _timeFormat.format(times.goldenHourEnd!.toLocal());
+        _sunsetTime = _timeFormat.format(times.sunset!.toLocal());
+        _goldenHourDuskTime = _timeFormat.format(times.goldenHour!.toLocal());
+        _locationStatus = 'Lokasi Ditemukan';
+        _isLoadingLocation = false;
+      });
+
     } catch (e) {
-      setState(() { _localTimezoneName = 'Gagal deteksi LBS'; _isLoadingLocation = false; });
+      print('Error calculating sun times: $e');
+      setState(() { _locationStatus = 'Gagal kalkulasi data LBS'; _isLoadingLocation = false; });
     }
   }
 
-  Widget _buildClockCard(String title, String timezoneName) {
-    // ... (Fungsi ini tetap sama persis seperti Tahap 11) ...
-    String formattedTime;
-    if (title == 'Waktu Lokal (LBS)' && _isLoadingLocation) { formattedTime = 'Mencari lokasi...'; } 
-    else if (title == 'Waktu Lokal (LBS)' && !_isLoadingLocation && !timezoneName.contains('/')) { formattedTime = 'Error: $timezoneName'; }
-    else {
-      try {
-        final location = tz.getLocation(timezoneName);
-        final zonedTime = tz.TZDateTime.from(_currentTime, location);
-        formattedTime = DateFormat('HH:mm:ss').format(zonedTime);
-      } catch (e) { formattedTime = 'Error Zona Waktu'; }
+  // --- 2. Logika Ekstraktor Palet Warna ---
+  Future<void> _pickImageAndExtractPalette() async {
+    setState(() { _isLoadingPalette = true; _imageFile = null; _paletteColors = []; });
+    
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) {
+      setState(() { _isLoadingPalette = false; });
+      return; // User membatalkan
     }
-    return Card(
-      elevation: 2,
-      child: Padding(
+    
+    final File file = File(image.path);
+    
+    // Generate palet
+    final PaletteGenerator palette = await PaletteGenerator.fromImageProvider(
+      FileImage(file),
+      size: const Size(200, 200), // Ukuran sampling
+      maximumColorCount: 6, // Ambil 6 warna
+    );
+    
+    setState(() {
+      _imageFile = file;
+      _paletteColors = palette.colors.toList();
+      _isLoadingPalette = false;
+    });
+  }
+
+  // --- 3. UI (Build Method) ---
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Creative Toolkit', style: TextStyle(color: primaryBlack)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: primaryBlack),
+      ),
+      body: ListView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(timezoneName.contains('/') ? timezoneName : '(LBS Error)', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
-            Text(formattedTime, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'monospace')),
-          ],
-        ),
+        children: [
+          // --- Bagian 1: Kalkulator Golden Hour ---
+          _buildGroupHeader('Fotografi'),
+          Card(
+            elevation: 0,
+            color: lightGrey,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kalkulator Golden Hour',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryBlack),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isLoadingLocation ? _locationStatus : 'Berhasil: Menampilkan data untuk lokasi Anda',
+                    style: TextStyle(color: _isLoadingLocation ? Colors.orange[700] : primaryGreen),
+                  ),
+                  const Divider(height: 24),
+                  
+                  // Tampilkan hasil
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildTimeInfo(Icons.wb_sunny_outlined, 'Sunrise', _sunriseTime, primaryGreen),
+                      _buildTimeInfo(Icons.wb_sunny, 'Golden Hour', _goldenHourTime, primaryGreen),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildTimeInfo(Icons.dark_mode_outlined, 'Sunset', _sunsetTime, darkGrey),
+                      _buildTimeInfo(Icons.dark_mode, 'Blue Hour', _goldenHourDuskTime, darkGrey),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // --- Bagian 2: Ekstraktor Palet Warna ---
+          _buildGroupHeader('Inspirasi'),
+          Card(
+            elevation: 0,
+            color: lightGrey,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Ekstraktor Palet Warna',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryBlack),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Tampilkan gambar & palet
+                  if (_isLoadingPalette)
+                    const Center(child: CircularProgressIndicator(color: primaryGreen)),
+                  
+                  if (_imageFile != null && _paletteColors.isNotEmpty)
+                    Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12.0),
+                          child: Image.file(_imageFile!, height: 200, fit: BoxFit.cover),
+                        ),
+                        const SizedBox(height: 16),
+                        // Tampilkan Palet
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: _paletteColors.map((color) {
+                            return Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.black26, width: 0.5)
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                    
+                  if (_imageFile == null && !_isLoadingPalette)
+                    const Center(child: Text('Pilih gambar untuk melihat palet warnanya.', style: TextStyle(color: darkGrey))),
+
+                  const SizedBox(height: 16),
+                  
+                  // Tombol Aksi
+                  ElevatedButton.icon(
+                    onPressed: _pickImageAndExtractPalette,
+                    icon: const Icon(Icons.image_outlined),
+                    label: Text(_imageFile == null ? 'Pilih Gambar' : 'Pilih Gambar Lain'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlack,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // --- [FUNGSI BARU] UNTUK KONVERTER MATA UANG ---
-
-  // 1. Ambil data dari API
-  Future<void> _loadRates() async {
-    final rates = await _currencyService.getLatestRates();
-    if (rates != null) {
-      setState(() {
-        _rates = rates;
-        _isLoadingRates = false;
-        // Hitung konversi awal (1 USD ke IDR)
-        _convert();
-      });
-    } else {
-      setState(() {
-        _isLoadingRates = false;
-        _conversionResult = 'Gagal memuat nilai tukar.';
-      });
-    }
-  }
-
-  // 2. Logika perhitungan konversi
-  void _convert() {
-    if (_rates == null) return; // API belum siap
-
-    // Ambil jumlah dari textfield
-    final double? amount = double.tryParse(_amountController.text);
-    if (amount == null) {
-      setState(() {
-        _conversionResult = 'Jumlah tidak valid';
-      });
-      return;
-    }
-
-    // Ambil nilai tukar (semua based on USD)
-    final double rateFrom = _rates![_fromCurrency].toDouble();
-    final double rateTo = _rates![_toCurrency].toDouble();
-
-    // Rumus konversi: (Amount / RateFrom) * RateTo
-    // (Ubah dulu ke USD, baru ubah ke mata uang tujuan)
-    final double result = (amount / rateFrom) * rateTo;
-
-    // Format hasil
-    setState(() {
-      _conversionResult = '${result.toStringAsFixed(2)} $_toCurrency';
-    });
-  }
-
-  // 3. Widget untuk UI Konverter
-  Widget _buildCurrencyConverter() {
-    if (_isLoadingRates) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_rates == null) {
-      return Center(
-        child: Text(
-          _conversionResult,
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
-    }
-
-    // Tampilkan UI jika data siap
+  // Helper untuk UI Jam
+  Widget _buildTimeInfo(IconData icon, String label, String time, Color iconColor) {
     return Column(
       children: [
-        // Input Jumlah
-        TextField(
-          controller: _amountController,
-          decoration: const InputDecoration(
-            labelText: 'Jumlah',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (value) => _convert(), // Otomatis hitung saat diketik
-        ),
-        const SizedBox(height: 16),
-        
-        // Dropdown "From" dan "To"
-        Row(
-          children: [
-            // Dropdown "From"
-            Expanded(
-              child: _buildCurrencyDropdown(
-                value: _fromCurrency,
-                onChanged: (newValue) {
-                  setState(() {
-                    _fromCurrency = newValue!;
-                  });
-                  _convert();
-                },
-              ),
-            ),
-            // Ikon panah
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Icon(Icons.arrow_forward),
-            ),
-            // Dropdown "To"
-            Expanded(
-              child: _buildCurrencyDropdown(
-                value: _toCurrency,
-                onChanged: (newValue) {
-                  setState(() {
-                    _toCurrency = newValue!;
-                  });
-                  _convert();
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        
-        // Hasil Konversi
+        Icon(icon, color: iconColor, size: 30),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: darkGrey, fontSize: 12)),
         Text(
-          'Hasil Konversi:',
-          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-        ),
-        Text(
-          _conversionResult,
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          _isLoadingLocation ? '--:--' : time,
+          style: const TextStyle(color: primaryBlack, fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 
-  // Helper untuk membuat Dropdown
-  Widget _buildCurrencyDropdown({
-    required String value,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: _currencies.map((String currency) {
-        return DropdownMenuItem<String>(
-          value: currency,
-          child: Text(currency),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-      ),
-    );
-  }
-
-  // --- [MODIFIKASI] build() UTAMA ---
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Creative Toolkit'),
-      ),
-      body: GestureDetector(
-        // Tambahkan ini agar keyboard otomatis tutup saat klik di luar
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // --- Bagian 1: Konversi Waktu (Tetap Sama) ---
-            const Text(
-              'Konverter Waktu Global',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            _buildClockCard('Waktu Lokal (LBS)', _localTimezoneName),
-            _buildClockCard('WIB', 'Asia/Jakarta'),
-            _buildClockCard('WITA', 'Asia/Makassar'),
-            _buildClockCard('WIT', 'Asia/Jayapura'),
-            _buildClockCard('London', 'Europe/London'),
-            
-            const Divider(height: 40),
-            
-            // --- Bagian 2: Konversi Mata Uang [DIGANTI] ---
-            const Text(
-              'Konverter Mata Uang',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                // Panggil widget konverter baru kita
-                child: _buildCurrencyConverter(),
-              ),
-            ),
-          ],
+  // Helper untuk UI Judul Grup
+  Widget _buildGroupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0, top: 16.0, bottom: 8.0),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          color: darkGrey,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.1,
         ),
       ),
     );
