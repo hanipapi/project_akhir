@@ -6,7 +6,6 @@ import 'package:project_akhir/models/photo_model.dart';
 import 'package:project_akhir/pages/detail_foto_page.dart';
 import 'package:project_akhir/services/koleksi_service.dart';
 
-// 1. Ubah menjadi StatefulWidget
 class KoleksiPage extends StatefulWidget {
   const KoleksiPage({super.key});
 
@@ -49,7 +48,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
 
   @override
   Widget build(BuildContext context) {
-    // [UI DIUBAH]
+    
     return Scaffold(
       backgroundColor: Colors.white,
       // Kita gunakan NestedScrollView agar search bar bisa scroll bersama grid
@@ -64,7 +63,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
               elevation: 0,
               automaticallyImplyLeading: false, // Hilangkan tombol back
               
-              // [BARU] Search Bar
+              // Search Bar
               title: Container(
                 height: 48,
                 child: TextField(
@@ -84,7 +83,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
               ),
             ),
             
-            // [BARU] Filter Buttons
+            // Filter Buttons
             SliverToBoxAdapter(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -98,7 +97,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
               ),
             ),
             
-            // [BARU] Title
+            // Title
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -124,13 +123,13 @@ class _KoleksiPageState extends State<KoleksiPage> {
     );
   }
 
-  // [BARU] Helper untuk tombol filter
+  // Helper untuk tombol filter
   Widget _buildFilterChip(String label, bool isActive) {
     return FilterChip(
       label: Text(label),
       selected: isActive,
       onSelected: (bool selected) {
-        // Logika filter bisa ditambahkan di sini nanti
+        // Logika filter bisa ditambahkan di sini nanti (next aja)
       },
       backgroundColor: lightGrey,
       selectedColor: primaryBlack,
@@ -143,7 +142,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
     );
   }
   
-  // [BARU] Helper untuk state kosong
+  // Helper untuk state kosong
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -174,7 +173,7 @@ class _KoleksiPageState extends State<KoleksiPage> {
     );
   }
 
-  // [MODIFIKASI] Grid dipisah ke widget helper
+  //Grid dipisah ke widget helper
   Widget _buildGrid() {
     return RefreshIndicator(
       color: primaryGreen,

@@ -23,14 +23,14 @@ class NotificationService {
     );
     await _plugin.initialize(settings);
     
-    // Minta izin notifikasi saat inisialisasi (penting untuk Android 13+)
+    // Minta izin notifikasi saat inisialisasi (untuk Android 13+)
      await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
-  // 2. [FUNGSI BARU] Notifikasi instan
+  // 2.  Notifikasi instan
   static Future<void> showSimpleNotification(String title, String body) async {
     // Detail notifikasi untuk Android
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
@@ -61,7 +61,4 @@ class NotificationService {
       details,
     );
   }
-
-  // 3. [FUNGSI LAMA DIHAPUS]
-  // Kita tidak lagi memerlukan showTestNotification() atau scheduleDailyNotification()
 }

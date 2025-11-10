@@ -1,7 +1,6 @@
 // Lokasi File: lib/pages/main_page.dart
 import 'package:flutter/material.dart';
 import 'package:project_akhir/pages/beranda_page.dart';
-// [INI BAGIAN PENTING] Pastikan import ini ada
 import 'package:project_akhir/pages/koleksi_page.dart';
 import 'package:project_akhir/pages/pencarian_page.dart';
 import 'package:project_akhir/pages/profil_page.dart';
@@ -26,7 +25,7 @@ class _MainPageState extends State<MainPage> {
   static const List<Widget> _pages = <Widget>[
     BerandaPage(),
     PencarianPage(),
-    KoleksiPage(), // <-- Ini yang menyebabkan error jika import tidak ada
+    KoleksiPage(), 
     ProfilPage(),
   ];
 

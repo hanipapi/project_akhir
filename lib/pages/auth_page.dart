@@ -13,8 +13,8 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   // Definisikan warna branding kita
-  static const Color primaryGreen = Color(0xFF2ECC71); // <-- Warna hijau "ea"
-  static const Color primaryBlack = Color(0xFF1F1F1F); // <-- Warna hitam "id"
+  static const Color primaryGreen = Color(0xFF2ECC71); 
+  static const Color primaryBlack = Color(0xFF1F1F1F); 
   static const Color lightGrey = Color(0xFFF2F2F2);
   static const Color darkGrey = Color(0xFF6E6E6E);
 
@@ -95,9 +95,9 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    // [UI BARU SESUAI BRANDING]
+   
     return Scaffold(
-      // 1. Latar belakang putih bersih
+      // 1. Latar belakang 
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
@@ -107,11 +107,11 @@ class _AuthPageState extends State<AuthPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 2. Logo (Mirip logo Anda)
+                // 2. Logo 
                 Icon(
-                  Icons.lightbulb_outline, // Ikon bolam lampu
+                  Icons.lightbulb_outline, 
                   size: 80,
-                  color: primaryGreen, // Warna hijau
+                  color: primaryGreen, 
                 ),
                 const SizedBox(height: 16),
                 
@@ -122,7 +122,7 @@ class _AuthPageState extends State<AuthPage> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: primaryBlack, // Warna hitam
+                    color: primaryBlack, 
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  // [UI BARU] Helper widget untuk TextField
+  //  Helper widget untuk TextField
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -229,13 +229,13 @@ class _AuthPageState extends State<AuthPage> {
       controller: controller,
       obscureText: isPassword,
       keyboardType: keyboardType,
-      style: TextStyle(color: primaryBlack), // Teks input hitam
+      style: TextStyle(color: primaryBlack), 
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: darkGrey),
         prefixIcon: Icon(icon, color: darkGrey),
         filled: true,
-        fillColor: lightGrey, // Latar belakang abu-abu muda
+        fillColor: lightGrey, 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
           borderSide: BorderSide.none,
@@ -246,7 +246,7 @@ class _AuthPageState extends State<AuthPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
-          borderSide: BorderSide(color: primaryGreen, width: 2), // Fokus hijau
+          borderSide: BorderSide(color: primaryGreen, width: 2), 
         ),
       ),
     );

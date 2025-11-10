@@ -3,7 +3,6 @@
 import 'package:bcrypt/bcrypt.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// [BARU] 1. Import Notification Service
 import 'package:project_akhir/services/notification_service.dart';
 
 class AuthService {
@@ -15,7 +14,7 @@ class AuthService {
       if (_userBox.containsKey(email)) {
         return false;
       }
-      // [PERBAIKAN] Menggunakan 'Bcrypt' (huruf kecil)
+      // Menggunakan 'Bcrypt' (huruf kecil)
       String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
       _userBox.put(email, {
         'username': username,
@@ -36,11 +35,11 @@ class AuthService {
         return false;
       }
 
-      // [PERBAIKAN] Menggunakan Map<dynamic, dynamic>
+      // Menggunakan Map<dynamic, dynamic>
       final user = _userBox.get(email) as Map<dynamic, dynamic>;
       final String hashedPassword = user['password'];
 
-      // [PERBAIKAN] Menggunakan 'Bcrypt' (huruf kecil)
+      //  Menggunakan 'Bcrypt' (huruf kecil)
       bool passwordMatch = BCrypt.checkpw(password, hashedPassword);
 
       if (passwordMatch) {
@@ -48,7 +47,7 @@ class AuthService {
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('currentUserEmail', email);
         
-        // [BARU] 2. Panggil notifikasi setelah login sukses
+        //  2. Panggil notifikasi setelah login sukses
         String username = user['username']; // Ambil username
         NotificationService.showSimpleNotification(
           'Login Berhasil!',
@@ -76,7 +75,7 @@ class AuthService {
       }
       
       if (_userBox.containsKey(email)) {
-        // [PERBAIKAN] Menggunakan Map<dynamic, dynamic>
+        // Menggunakan Map<dynamic, dynamic>
         return _userBox.get(email) as Map<dynamic, dynamic>;
       }
       return null;

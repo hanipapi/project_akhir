@@ -23,12 +23,12 @@ class KoleksiService {
     if (email == null) return;
     List<dynamic> koleksi = await _getUserCollection(email);
     
-    // [MODIFIKASI DI SINI]
+    
     koleksi.add({
       'id': photo.id,
       'imageUrl': photo.imageUrl,
       'creatorName': photo.creatorName,
-      'description': photo.description, // <-- [TAMBAHKAN INI]
+      'description': photo.description, 
     });
     
     await _koleksiBox.put(email, koleksi);

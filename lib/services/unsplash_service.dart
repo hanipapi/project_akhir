@@ -76,8 +76,6 @@ class UnsplashService {
       throw Exception('Failed to load popular photos');
     }
   }
-
-  // --- [FUNGSI BARU] ---
   // Fungsi untuk mengambil foto serupa/terkait
   Future<List<Photo>> getRelatedPhotos(String photoId) async {
     try {

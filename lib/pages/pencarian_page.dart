@@ -26,9 +26,9 @@ class _PencarianPageState extends State<PencarianPage> {
   final PageController _pageController = PageController();
 
   List<Photo> _photos = []; // Untuk grid "Ide" atau "Hasil Pencarian"
-  List<Photo> _carouselPhotos = []; // [BARU] Untuk carousel
+  List<Photo> _carouselPhotos = []; // Untuk carousel
   bool _isLoading = true; // Loading untuk grid
-  bool _isLoadingCarousel = true; // [BARU] Loading untuk carousel
+  bool _isLoadingCarousel = true; // Loading untuk carousel
   bool _hasSearched = false;
   int _currentPageIndex = 0; // Untuk indikator carousel
 
@@ -36,10 +36,10 @@ class _PencarianPageState extends State<PencarianPage> {
   void initState() {
     super.initState();
     _fetchDiscoverPhotos(); // Panggil foto untuk grid "Ide"
-    _fetchCarouselPhotos(); // [BARU] Panggil foto untuk carousel
+    _fetchCarouselPhotos(); // Panggil foto untuk carousel
   }
 
-  // [BARU] Ambil foto untuk carousel
+  // Ambil foto untuk carousel
   Future<void> _fetchCarouselPhotos() async {
     setState(() {
       _isLoadingCarousel = true;
@@ -54,7 +54,7 @@ class _PencarianPageState extends State<PencarianPage> {
     } catch (e) {
       setState(() {
         _isLoadingCarousel = false;
-      }); // Gagal diam-diam
+      }); 
     }
   }
 
@@ -120,7 +120,7 @@ class _PencarianPageState extends State<PencarianPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // [MODIFIKASI] Tampilkan carousel HANYA jika tidak mencari
+          // Tampilkan carousel HANYA jika tidak mencari
           if (!_hasSearched) ...[
             _buildSlideBar(), // Panggil carousel
             const Padding(
@@ -143,7 +143,7 @@ class _PencarianPageState extends State<PencarianPage> {
     );
   }
 
-  // Widget Search Bar (Tidak berubah)
+  // Widget Search Bar
   Widget _buildSearchBar() {
     return Container(
       height: 48,
@@ -170,7 +170,7 @@ class _PencarianPageState extends State<PencarianPage> {
     );
   }
 
-  // [PEROMBAKAN TOTAL] Widget untuk "Slide Bar" (Carousel Foto)
+  //Widget untuk "Slide Bar" (Carousel Foto)
   Widget _buildSlideBar() {
     if (_isLoadingCarousel) {
       return Container(
@@ -179,7 +179,7 @@ class _PencarianPageState extends State<PencarianPage> {
       );
     }
     if (_carouselPhotos.isEmpty) {
-      return const SizedBox.shrink(); // Jangan tampilkan jika API gagal
+      return const SizedBox.shrink(); 
     }
 
     return Container(

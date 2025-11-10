@@ -6,7 +6,6 @@ import 'package:project_akhir/pages/toolkit_page.dart';
 import 'package:project_akhir/services/auth_service.dart';
 import 'package:project_akhir/services/saran_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// [DIHAPUS] Import notification_service sudah tidak perlu di halaman ini
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -134,8 +133,6 @@ class _ProfilPageState extends State<ProfilPage> {
             },
           ),
           
-          // --- [DIHAPUS] Grup Notifikasi ---
-          // Kita sudah tidak perlu tombol-tombol ini lagi
           
           // --- 3. Grup Saran & Kesan ---
           _buildGroupHeader('Masukan'),
@@ -214,5 +211,5 @@ class _ProfilPageState extends State<ProfilPage> {
     );
   }
 
-  // [DIHAPUS] Helper _showNotificationDialog() sudah tidak diperlukan
+ 
 }

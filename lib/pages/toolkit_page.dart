@@ -73,7 +73,7 @@ class _ToolkitPageState extends State<ToolkitPage> {
     try {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
       
-      // [PERBAIKAN 2] Panggil SunCalc dengan parameter 'lat:' dan 'lng:'
+      // Panggil SunCalc dengan parameter 'lat:' dan 'lng:'
       var times = SunCalc.getTimes(
         DateTime.now(), 
         lat: position.latitude, 
@@ -81,7 +81,7 @@ class _ToolkitPageState extends State<ToolkitPage> {
       );
       
       setState(() {
-        // [PERBAIKAN 3] Tambahkan 'null check' (!) karena datanya nullable
+        // Tambahkan 'null check' (!) karena datanya nullable
         _sunriseTime = _timeFormat.format(times.sunrise!.toLocal());
         _goldenHourTime = _timeFormat.format(times.goldenHourEnd!.toLocal());
         _sunsetTime = _timeFormat.format(times.sunset!.toLocal());

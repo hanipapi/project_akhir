@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:project_akhir/models/photo_model.dart';
 import 'package:project_akhir/services/koleksi_service.dart';
-// [BARU] Import UnsplashService
 import 'package:project_akhir/services/unsplash_service.dart';
 
 class DetailFotoPage extends StatefulWidget {
@@ -28,14 +27,14 @@ class _DetailFotoPageState extends State<DetailFotoPage> {
   bool _sudahDisimpan = false;
   bool _apakahAdaPerubahan = false;
 
-  // [BARU] State untuk Foto Serupa
+  // State untuk Foto Serupa
   late Future<List<Photo>> _relatedPhotosFuture;
 
   @override
   void initState() {
     super.initState();
     _cekStatusFoto();
-    // [BARU] Panggil foto serupa dan simpan Future-nya
+    
     _relatedPhotosFuture = _fetchRelatedPhotos(); 
   }
 
@@ -48,13 +47,13 @@ class _DetailFotoPageState extends State<DetailFotoPage> {
     }
   }
 
-  // [BARU] Fungsi untuk mengambil foto serupa
+  // Fungsi untuk mengambil foto serupa
   Future<List<Photo>> _fetchRelatedPhotos() async {
     try {
       final photos = await _unsplashService.getRelatedPhotos(widget.photo.id);
       return photos;
     } catch (e) {
-      // Gagal diam-diam, kembalikan list kosong
+      
       return []; 
     }
   }
@@ -83,7 +82,7 @@ class _DetailFotoPageState extends State<DetailFotoPage> {
     );
   }
 
-  // [UI DIUBAH]
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -172,7 +171,7 @@ class _DetailFotoPageState extends State<DetailFotoPage> {
 
               const Divider(color: lightGrey),
 
-              // 3. [UI BARU] Bagian Foto Serupa
+              // 3. Bagian Foto Serupa
               _buildRelatedPhotosGrid(),
             ],
           ),
@@ -222,7 +221,7 @@ class _DetailFotoPageState extends State<DetailFotoPage> {
                 itemCount: photos.length,
                 itemBuilder: (context, index) {
                   final photo = photos[index];
-                  // UI Item (Sama seperti Beranda)
+                  
                   return InkWell(
                     onTap: () {
                       // [PENTING] Navigasi ke Halaman Detail yang baru

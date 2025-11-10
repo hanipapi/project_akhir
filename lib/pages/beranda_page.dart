@@ -14,7 +14,6 @@ class BerandaPage extends StatefulWidget {
 }
 
 class _BerandaPageState extends State<BerandaPage> {
-  // [BARU] Definisikan warna branding
   static const Color primaryGreen = Color(0xFF2ECC71);
   static const Color primaryBlack = Color(0xFF1F1F1F);
   static const Color darkGrey = Color(0xFF6E6E6E);
@@ -59,16 +58,15 @@ class _BerandaPageState extends State<BerandaPage> {
 
   @override
   Widget build(BuildContext context) {
-    // [UI DIUBAH]
     return Scaffold(
-      backgroundColor: Colors.white, // Latar belakang putih
+      backgroundColor: Colors.white, 
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0, // Hilangkan bayangan
+        elevation: 0, 
         title: Text(
           'ideaspark',
           style: TextStyle(
-            color: primaryBlack, // Teks hitam
+            color: primaryBlack, 
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -77,7 +75,7 @@ class _BerandaPageState extends State<BerandaPage> {
           IconButton(
             icon: Icon(Icons.notifications_none, color: primaryBlack),
             onPressed: () {
-              // Nanti bisa dihubungkan ke halaman notifikasi
+             
             },
           )
         ],
@@ -111,7 +109,7 @@ class _BerandaPageState extends State<BerandaPage> {
                         ),
                       );
                     },
-                    // Kita gunakan Column, bukan Stack lagi
+                   
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -135,7 +133,7 @@ class _BerandaPageState extends State<BerandaPage> {
                         ),
                         
                         // 2. Teks (Nama Foto / Deskripsi)
-                        if (photo.description.isNotEmpty) // Hanya tampilkan jika ada
+                        if (photo.description.isNotEmpty) 
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
                             child: Text(
